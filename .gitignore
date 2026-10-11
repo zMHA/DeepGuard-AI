@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Data and downloaded datasets
+data/raw/
+data/processed/
+!data/processed/.gitkeep
+
+# Model checkpoints and weights
+models/
+results/checkpoints/
+*.pt
+*.pth
+*.onnx
+
+# Generated results and caches
+.pytest_cache/
+.streamlit/secrets.toml
