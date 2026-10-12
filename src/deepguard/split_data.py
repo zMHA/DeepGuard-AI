@@ -1,9 +1,14 @@
 
+"""Create leakage-aware train/validation splits from a frame manifest."""
+
 import argparse
-import csv
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
+
+
+REQUIRED_COLUMNS = {"image_path", "label", "video_id", "group_id"}
 
 
 def split_manifest(
@@ -12,132 +17,150 @@ def split_manifest(
     validation_fraction=0.2,
     seed=42,
 ):
-    manifest_path = Path(manifest_path).resolve()
-    output_dir = Path(output_dir)
+    """Split frames by source group, never by individual frame or video."""
+    manifest_path = Path(manifest_path)
+
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Manifest not found: {manifest_path}")
 
     if not 0 < validation_fraction < 1:
+        raise ValueError("validation_fraction must be between 0 and 1.")
+
+    df = pd.read_csv(manifest_path)
+
+    missing = REQUIRED_COLUMNS - set(df.columns)
+    if missing:
         raise ValueError(
-            "validation_fraction must be between 0 and 1."
+            f"Manifest is missing required columns: {sorted(missing)}"
         )
 
-    with manifest_path.open(
-        "r", newline="", encoding="utf-8-sig"
-    ) as file:
-        reader = csv.DictReader(file)
+    if df.empty:
+        raise ValueError("Manifest contains no samples.")
 
-        required = {"image_path", "label", "video_id"}
-        if not reader.fieldnames or not required.issubset(
-            reader.fieldnames
-        ):
-            raise ValueError(
-                "Manifest must contain image_path, label, "
-                "and video_id columns."
-            )
+    for column in ("image_path", "video_id", "group_id"):
+        if df[column].isna().any() or (
+            df[column].astype(str).str.strip() == ""
+        ).any():
+            raise ValueError(f"Manifest contains empty values in {column}.")
 
-        rows = list(reader)
+    labels = pd.to_numeric(df["label"], errors="coerce")
 
-    if len(rows) < 2:
-        raise ValueError("At least two images are required.")
+    if labels.isna().any() or not labels.isin([0, 1]).all():
+        raise ValueError("Labels must be numeric 0 (real) or 1 (fake).")
 
-    groups = {}
-    for row in rows:
-        video_id = row["video_id"].strip()
+    df["label"] = labels.astype(int)
 
-        if not video_id:
-            raise ValueError("Every row must have a video_id.")
+    if set(df["label"].unique()) != {0, 1}:
+        raise ValueError("Manifest must contain both real and fake samples.")
 
-        try:
-            label = int(row["label"])
-        except ValueError as exc:
-            raise ValueError("Labels must be integers 0 or 1.") from exc
-
-        if label not in (0, 1):
-            raise ValueError("Labels must be 0 (real) or 1 (fake).")
-
-        row["label"] = str(label)
-        groups.setdefault(video_id, []).append(row)
-
-    group_ids = np.array(sorted(groups.keys()), dtype=object)
-
+    # Each source group must have a consistent set of samples.
+    group_ids = sorted(df["group_id"].astype(str).unique())
     if len(group_ids) < 2:
         raise ValueError(
-            "At least two distinct video groups are required."
+            "At least two distinct source groups are required "
+            "for a train/validation split."
         )
 
+    # Keep group identifiers together. A seeded RNG makes the split repeatable.
     rng = np.random.default_rng(seed)
-    shuffled = rng.permutation(group_ids)
+    shuffled_groups = np.array(group_ids, dtype=object)
+    rng.shuffle(shuffled_groups)
 
-    val_count = max(
-        1,
-        min(
-            len(shuffled) - 1,
-            round(len(shuffled) * validation_fraction),
-        ),
+    n_validation_groups = max(
+        1, int(round(len(shuffled_groups) * validation_fraction))
+    )
+    n_validation_groups = min(
+        n_validation_groups, len(shuffled_groups) - 1
     )
 
-    val_groups = set(shuffled[:val_count])
-    train_groups = set(shuffled[val_count:])
+    validation_groups = set(
+        shuffled_groups[:n_validation_groups].tolist()
+    )
+    train_groups = set(shuffled_groups[n_validation_groups:].tolist())
 
-    train_rows = [
-        row for row in rows if row["video_id"].strip() in train_groups
-    ]
-    val_rows = [
-        row for row in rows if row["video_id"].strip() in val_groups
-    ]
+    train_df = df[df["group_id"].astype(str).isin(train_groups)].copy()
+    validation_df = df[
+        df["group_id"].astype(str).isin(validation_groups)
+    ].copy()
 
-    assert train_groups.isdisjoint(val_groups)
+    if train_df.empty or validation_df.empty:
+        raise RuntimeError("The split produced an empty dataset.")
 
+    if set(train_df["label"].unique()) != {0, 1}:
+        raise ValueError(
+            "Training split does not contain both classes. "
+            "Review the source-group composition."
+        )
+
+    if set(validation_df["label"].unique()) != {0, 1}:
+        raise ValueError(
+            "Validation split does not contain both classes. "
+            "Review the source-group composition or validation fraction."
+        )
+
+    overlap = (
+        set(train_df["group_id"].astype(str))
+        & set(validation_df["group_id"].astype(str))
+    )
+    if overlap:
+        raise AssertionError(
+            f"Source-group leakage detected: {sorted(overlap)}"
+        )
+
+    output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    columns = ["image_path", "label", "video_id"]
+    train_path = output_dir / "train.csv"
+    validation_path = output_dir / "validation.csv"
 
-    for filename, subset in (
-        ("train.csv", train_rows),
-        ("validation.csv", val_rows),
-    ):
-        with (output_dir / filename).open(
-            "w", newline="", encoding="utf-8"
-        ) as file:
-            writer = csv.DictWriter(file, fieldnames=columns)
-            writer.writeheader()
-            writer.writerows(
-                {column: row[column] for column in columns}
-                for row in subset
-            )
+    train_df.to_csv(train_path, index=False)
+    validation_df.to_csv(validation_path, index=False)
 
-    print(f"Training images: {len(train_rows)}")
-    print(f"Validation images: {len(val_rows)}")
-    print(f"Training video groups: {len(train_groups)}")
-    print(f"Validation video groups: {len(val_groups)}")
-    print("Video-group overlap: 0")
-    print(f"Splits saved to: {output_dir.resolve()}")
+    print("Split complete.")
+    print(f"Source groups: {len(group_ids)}")
+    print(f"Training groups: {len(train_groups)}")
+    print(f"Validation groups: {len(validation_groups)}")
+    print(f"Training frames: {len(train_df)}")
+    print(f"Validation frames: {len(validation_df)}")
+    print(f"Training class counts:\n{train_df['label'].value_counts().sort_index()}")
+    print(
+        "Validation class counts:\n"
+        f"{validation_df['label'].value_counts().sort_index()}"
+    )
+    print(f"Training manifest: {train_path}")
+    print(f"Validation manifest: {validation_path}")
 
-    return train_rows, val_rows
+    return train_df, validation_df
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Split a frame manifest by source group."
+    )
     parser.add_argument(
         "--manifest",
         default="data/processed/manifest.csv",
+        help="Input frame manifest CSV.",
     )
     parser.add_argument(
         "--output-dir",
         default="data/processed/splits",
+        help="Directory for train.csv and validation.csv.",
     )
     parser.add_argument(
         "--validation-fraction",
         type=float,
         default=0.2,
+        help="Fraction of source groups assigned to validation.",
     )
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
     split_manifest(
-        args.manifest,
-        args.output_dir,
-        args.validation_fraction,
-        args.seed,
+        manifest_path=args.manifest,
+        output_dir=args.output_dir,
+        validation_fraction=args.validation_fraction,
+        seed=args.seed,
     )
 
 

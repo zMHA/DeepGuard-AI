@@ -1,22 +1,24 @@
+
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Environment secrets
 .env
 
-# Data and downloaded datasets
+# Raw and processed image datasets
 data/raw/
-data/processed/
-!data/processed/.gitkeep
+data/processed/frames/
+data/processed/face_crops/
 
-# Model checkpoints and weights
-models/
-results/checkpoints/
-*.pt
-*.pth
-*.onnx
+# Generated model checkpoints and cross-validation outputs
+results/checkpoints*/
+results/cv_face_crops/
+results/*.pt
+results/*.pth
 
-# Generated results and caches
-.pytest_cache/
-.streamlit/secrets.toml
+# Generated visual audit images
+results/face_crop_audit.png
+results/crop_failure_inspection.png

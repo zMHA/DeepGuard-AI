@@ -66,6 +66,7 @@ def train(
     learning_rate=1e-4,
     seed=42,
     num_workers=0,
+    pretrained=True,
 ):
     if epochs < 1:
         raise ValueError("epochs must be at least 1.")
@@ -103,7 +104,12 @@ def train(
         num_workers=num_workers,
     )
 
-    model = build_classifier(pretrained=False).to(device)
+    model = build_classifier(pretrained=pretrained).to(device)
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+
+    for parameter in model.fc.parameters():
+        parameter.requires_grad = True
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -173,6 +179,13 @@ def main():
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--learning-rate", type=float, default=1e-4)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--no-pretrained",
+        action="store_false",
+        dest="pretrained",
+        help="Train without ImageNet-pretrained weights.",
+    )
+    parser.set_defaults(pretrained=True)
 
     args = parser.parse_args()
 
@@ -185,6 +198,7 @@ def main():
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         seed=args.seed,
+        pretrained=args.pretrained,
     )
 
 
