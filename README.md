@@ -2,11 +2,11 @@
 
 ### Explainable and Robust Deepfake Detection
 
-DeepGuard-AI is an AI research project focused on detecting manipulated facial videos using deep learning, explainable AI (XAI), and robustness evaluation. The project aims to develop a reproducible pipeline for distinguishing authentic media from manipulated content while investigating what visual evidence influences model predictions and how detection performance changes under common image degradations.
+DeepGuard-AI is an AI research project investigating deepfake detection using deep learning, explainable AI (XAI), and robustness evaluation. The project aims to build a reproducible pipeline for distinguishing authentic facial images from manipulated content while examining model behavior, source-video leakage, and generalization.
 
-**Repository:** [github.com/zMHA/DeepGuard-AI](https://github.com/zMHA/DeepGuard-AI)
+**Repository:** https://github.com/zMHA/DeepGuard-AI
 
-> **Project status:** Active development. The initial data-processing, model, training, and testing components are in place. Video-frame extraction, end-to-end evaluation, Grad-CAM explanations, robustness experiments, and the interactive demo are planned or under development.
+> **Project status:** Active research and development. The repository includes a ResNet-18 baseline, data validation, frame manifests, face cropping, crop auditing, group-based cross-validation, and automated tests. Current results are close to chance, so reliable deepfake detection has not yet been demonstrated.
 
 ---
 
@@ -14,16 +14,15 @@ DeepGuard-AI is an AI research project focused on detecting manipulated facial v
 
 * [Motivation](#motivation)
 * [Research Objectives](#research-objectives)
-* [Planned Features](#planned-features)
+* [Current Implementation](#current-implementation)
 * [Technology Stack](#technology-stack)
 * [Project Structure](#project-structure)
 * [Dataset](#dataset)
 * [Installation](#installation)
-* [Configuration](#configuration)
-* [Usage](#usage)
+* [Workflow](#workflow)
+* [Current Experimental Results](#current-experimental-results)
 * [Evaluation Plan](#evaluation-plan)
-* [Research Methodology](#research-methodology)
-* [Current Limitations](#current-limitations)
+* [Limitations](#limitations)
 * [Roadmap](#roadmap)
 * [Responsible Use](#responsible-use)
 * [Citation](#citation)
@@ -31,53 +30,55 @@ DeepGuard-AI is an AI research project focused on detecting manipulated facial v
 
 ## Motivation
 
-Deepfake technology can be used for entertainment and legitimate creative applications, but manipulated media can also facilitate misinformation, impersonation, and digital fraud. Reliable detection remains challenging because manipulation methods evolve and models may learn dataset-specific patterns instead of meaningful manipulation artifacts.
+Deepfake technology enables legitimate creative applications but can also facilitate impersonation, misinformation, and digital fraud. Detecting manipulated media remains challenging because manipulation methods evolve and machine-learning models can learn dataset-specific artifacts rather than generalizable evidence of manipulation.
 
-DeepGuard-AI explores a combination of deep learning, visual explanations, and robustness testing to investigate these challenges.
-
-The long-term goal is to develop a reproducible research pipeline that evaluates not only whether a model detects manipulated media, but also how it makes predictions and how consistently it performs under changing input conditions.
+DeepGuard-AI explores deep learning, explainability, and robustness evaluation to investigate these challenges. The long-term goal is to evaluate not only whether a model classifies an image correctly, but also how its predictions behave under changing input conditions and on previously unseen source videos.
 
 ## Research Objectives
 
-1. **Deepfake detection:** Develop a binary image-classification baseline for authentic and manipulated facial content.
-2. **Explainable AI:** Use Grad-CAM to visualize image regions that contribute to model predictions.
-3. **Robustness evaluation:** Investigate the effects of compression, blur, resizing, and other common image transformations.
-4. **Reproducibility:** Maintain structured configurations, deterministic random seeds where practical, automated tests, and documented experiments.
-5. **Leakage prevention:** Keep related source videos and their manipulated versions within the same dataset split.
-6. **Practical deployment:** Develop an interactive demonstration for exploring predictions and visual explanations.
+1. **Deepfake detection:** Develop a binary-classification baseline for authentic and manipulated facial images.
+2. **Explainable AI:** Investigate model predictions using visual explanation methods such as Grad-CAM.
+3. **Robustness:** Evaluate performance under compression, blur, resizing, and other image transformations.
+4. **Reproducibility:** Maintain structured manifests, experiment outputs, and automated tests.
+5. **Leakage prevention:** Keep related source videos and their manipulated versions within the same evaluation group.
+6. **Generalization:** Investigate performance on source videos and manipulation types not represented in training data.
 
-## Planned Features
+## Current Implementation
 
-| Feature                        | Technology           | Status                                                 |
-| ------------------------------ | -------------------- | ------------------------------------------------------ |
-| ResNet-18 binary classifier    | PyTorch, Torchvision | Baseline implementation                                |
-| Manifest-based image dataset   | Pandas, Pillow       | Implemented                                            |
-| Dataset validation             | Python               | Implemented                                            |
-| Group-aware data splitting     | NumPy, Pandas        | Initial implementation; source-group validation needed |
-| Training and checkpoint saving | PyTorch              | Implemented; real-data experiments pending             |
-| Video-frame extraction         | OpenCV               | Planned                                                |
-| Grad-CAM visual explanations   | Grad-CAM             | Planned                                                |
-| Robustness experiments         | OpenCV, PyTorch      | Planned                                                |
-| Interactive demo               | Streamlit            | Planned                                                |
-| Automated tests                | Pytest               | Initial tests implemented                              |
+| Component                                | Status                                          |
+| ---------------------------------------- | ----------------------------------------------- |
+| Manifest-based image dataset loader      | Implemented                                     |
+| Dataset and image-path validation        | Implemented                                     |
+| Video and source-group metadata          | Implemented; relationships require verification |
+| Video-frame extraction pipeline          | Implemented                                     |
+| Haar-cascade face cropping               | Implemented                                     |
+| Face-crop manifest generation            | Implemented                                     |
+| Face-crop auditing and failure reporting | Implemented                                     |
+| ResNet-18 baseline training              | Implemented                                     |
+| Model evaluation utilities               | Implemented                                     |
+| Five-fold group cross-validation         | Implemented                                     |
+| Automated tests                          | Implemented                                     |
+| Grad-CAM visual explanations             | Planned                                         |
+| Controlled robustness experiments        | Planned                                         |
+| Interactive Streamlit demo               | Planned                                         |
 
-These statuses describe the development state, not validated detection performance.
+Implementation status does not imply validated detection performance.
 
 ## Technology Stack
 
-* **Language:** Python 3.12
+* **Language:** Python
 * **Deep learning:** PyTorch and Torchvision
 * **Baseline architecture:** ResNet-18
 * **Computer vision:** OpenCV and Pillow
 * **Data processing:** NumPy and Pandas
-* **Machine learning utilities:** scikit-learn
-* **Explainability:** Grad-CAM
+* **Evaluation:** scikit-learn
 * **Visualization:** Matplotlib
-* **Interactive application:** Streamlit
-* **Testing:** Pytest
+* **Explainability:** Grad-CAM (planned)
+* **Interactive application:** Streamlit (planned)
+* **Testing:** pytest
 * **Configuration:** YAML
 
-Development and initial testing are performed on a CPU-based Windows environment. GPU acceleration may be introduced when compatible hardware is available.
+The project has been developed in a Windows environment. CPU execution is possible, although training speed depends on the hardware and model configuration.
 
 ## Project Structure
 
@@ -86,30 +87,37 @@ DeepGuard-AI/
 ├── configs/
 │   └── config.yaml
 ├── data/
-│   ├── raw/                  # Downloaded datasets (not tracked)
-│   └── processed/            # Extracted frames and manifests (not tracked)
-├── docs/                     # Research documentation
-├── models/                   # Local model artifacts
-├── notebooks/                # Experimental notebooks
-├── results/                  # Evaluation outputs
+│   ├── raw/                         # Local dataset; not tracked
+│   └── processed/                   # Local frames, crops, and manifests
+├── docs/
+├── models/                          # Local model artifacts
+├── notebooks/
+├── results/                         # Local metrics and visualizations
 ├── scripts/
-│   └── download.py           # FaceForensics++ downloader
+│   ├── audit_face_crops.py
+│   ├── crop_faces.py
+│   ├── cross_validate_face_crops.py
+│   ├── download.py
+│   ├── inspect_crop_failures.py
+│   ├── inspect_frames.py
+│   └── split_face_crops.py
 ├── src/
 │   └── deepguard/
 │       ├── __init__.py
-│       ├── classifier.py     # ResNet-18 model
-│       ├── dataset.py        # Manifest-based dataset loader
-│       ├── extract_frames.py # Frame extraction (to be implemented)
-│       ├── prepare_data.py   # Dataset validation
-│       ├── split_data.py    # Dataset splitting
-│       └── train.py         # Model training
+│       ├── classifier.py
+│       ├── dataset.py
+│       ├── evaluate.py
+│       ├── extract_frames.py
+│       ├── prepare_data.py
+│       ├── split_data.py
+│       └── train.py
 ├── tests/
-│   ├── test_dataset.py
-│   ├── test_split_data.py
-│   └── test_training_smoke.py
 ├── .gitignore
+├── LICENSE
 └── README.md
 ```
+
+Local datasets, face crops, model checkpoints, and generated experiment outputs are excluded from version control.
 
 ## Dataset
 
@@ -117,68 +125,54 @@ DeepGuard-AI/
 
 The initial experiments use [FaceForensics++](https://github.com/ondyari/FaceForensics), a research dataset containing authentic videos and manipulated facial videos.
 
-The initial local pilot contains:
+The current local pilot contains 20 videos across five source groups. The processed face-crop dataset contains 97 images. This pilot supports pipeline development and preliminary evaluation only; it is not large enough to establish reliable real-world performance.
 
-* 10 authentic videos.
-* 10 Deepfakes-manipulated videos.
-* Videos downloaded using the `c40` compression setting.
-* Video files stored locally and excluded from the Git repository.
-
-This small pilot is intended for pipeline development and debugging. It is not sufficient to establish reliable generalization or make broad claims about deepfake detection performance.
-
-### Dataset labels
+### Labels
 
 | Label | Meaning            |
-| ----- | ------------------ |
-| `0`   | Real / authentic   |
-| `1`   | Fake / manipulated |
+| ----: | ------------------ |
+|   `0` | Real / authentic   |
+|   `1` | Fake / manipulated |
 
-The image manifest is designed to include the following metadata:
+### Manifest format
 
-| Column       | Description                                                 |
-| ------------ | ----------------------------------------------------------- |
-| `image_path` | Path to an extracted image                                  |
-| `label`      | Binary class label                                          |
-| `video_id`   | Identifier for the video from which the image was extracted |
-| `group_id`   | Shared source-group identifier used to prevent data leakage |
+The processing pipeline uses CSV manifests containing:
 
-### Preventing data leakage
+| Column       | Description                                          |
+| ------------ | ---------------------------------------------------- |
+| `image_path` | Path to the image                                    |
+| `label`      | Binary class label                                   |
+| `video_id`   | Source video identifier                              |
+| `group_id`   | Source-group identifier for leakage-aware evaluation |
 
-Multiple manipulated videos can be derived from the same source videos. If related samples appear in both training and validation sets, evaluation results may overestimate generalization.
+Related original and manipulated videos should be assigned to the same source group whenever they share source material. The grouping logic must be verified against the dataset's actual relationships before final experiments.
 
-DeepGuard-AI therefore aims to group related originals and manipulations before splitting the data. The grouping strategy must be verified against the dataset's source relationships before conducting final experiments.
-
-**Important:** Frames extracted from the same video must never be treated as independent train/validation samples.
+**Important:** Frames or crops from the same source video must not be randomly distributed across training and validation sets. Such leakage can inflate evaluation results.
 
 ### Dataset access and terms
 
-Obtain FaceForensics++ through its official access procedure and follow the dataset's applicable terms of use. The dataset is not included in this repository.
+Obtain FaceForensics++ through its official access procedure and comply with its applicable terms of use. The dataset is not included in this repository.
 
-Official resources:
-
-* [FaceForensics++ repository](https://github.com/ondyari/FaceForensics)
-* [Official project page](https://fki.tic.heia-fr.ch/)
+* [Official repository](https://github.com/ondyari/FaceForensics)
 * [FaceForensics++ paper](https://arxiv.org/abs/1901.08971)
 
 ## Installation
 
 ### 1. Clone the repository
 
-```bash
+```powershell
 git clone https://github.com/zMHA/DeepGuard-AI.git
 cd DeepGuard-AI
 ```
 
 ### 2. Create a virtual environment
 
-Windows PowerShell:
-
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation in the current terminal, use:
+If PowerShell blocks activation in the current terminal:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process RemoteSigned
@@ -187,7 +181,7 @@ Set-ExecutionPolicy -Scope Process RemoteSigned
 
 ### 3. Install dependencies
 
-Install a PyTorch and Torchvision combination compatible with your operating system and hardware, following the [official PyTorch installation guide](https://pytorch.org/get-started/locally/).
+Install a compatible PyTorch and Torchvision combination using the [official PyTorch installation guide](https://pytorch.org/get-started/locally/).
 
 Install the project utilities:
 
@@ -201,187 +195,185 @@ Verify the environment:
 python -c "import torch, torchvision; print('PyTorch:', torch.__version__); print('Torchvision:', torchvision.__version__); print('CUDA available:', torch.cuda.is_available())"
 ```
 
-## Configuration
+## Workflow
 
-The main configuration file is:
+Run commands from the repository root with the virtual environment activated. Use each script's `--help` option to inspect supported arguments.
 
-`configs/config.yaml`
-
-The initial configuration includes:
-
-| Parameter         | Initial value |
-| ----------------- | ------------: |
-| Random seed       |            42 |
-| Image size        |     224 × 224 |
-| Model             |     ResNet-18 |
-| Number of classes |             2 |
-| Batch size        |             8 |
-| Training epochs   |             5 |
-| Learning rate     |        0.0001 |
-| Weight decay      |        0.0001 |
-| Real label        |             0 |
-| Fake label        |             1 |
-
-These values are starting points for pipeline development, not optimized hyperparameters. Actual experiments may require different settings depending on dataset size, hardware, and evaluation results.
-
-## Usage
-
-Run commands from the repository root with the virtual environment activated.
-
-### 1. Run the automated tests
+### 1. Run automated tests
 
 ```powershell
-python -m pytest -v
+python -m pytest -q
 ```
 
-The initial test suite covers dataset loading, label validation, data-splitting behavior, and a synthetic training smoke test.
+The latest recorded test run completed with six passing tests. Passing software tests verifies tested code paths, not model accuracy.
 
-Passing synthetic tests confirms basic software behavior; it does not demonstrate deepfake detection accuracy.
+### 2. Prepare the frame manifest
 
-### 2. Validate a dataset manifest
+Obtain the authorized dataset and prepare the frame manifest using the project's extraction pipeline and configuration. The expected manifest is:
 
-The manifest validator expects a CSV with `image_path`, `label`, and `video_id` columns.
+`data/processed/manifest.csv`
 
-After preparing the manifest, run:
+The manifest should include `image_path`, `label`, `video_id`, and `group_id`.
+
+### 3. Validate the dataset
 
 ```powershell
 python -m src.deepguard.prepare_data --manifest data/processed/manifest.csv
 ```
 
-If the images are stored separately from the manifest's relative paths, provide the image root:
+If the command supports a separate image root, use the appropriate `--image-root` argument as documented by its help output.
+
+### 4. Crop faces
 
 ```powershell
-python -m src.deepguard.prepare_data --manifest data/processed/manifest.csv --image-root data/processed
+python scripts/crop_faces.py
 ```
 
-The validator checks required columns, labels, file availability, and class representation.
+The script uses OpenCV's Haar-cascade detector to generate face crops and a crop manifest. The default output locations are:
 
-### 3. Prepare training and validation manifests
+* Face crops: `data/processed/face_crops/`
+* Crop manifest: `data/processed/face_crops_manifest.csv`
+* Crop failures: `data/processed/crop_failures.csv`
 
-The splitting component is located at:
+Frames where no face is detected should be reviewed rather than silently assumed to contain valid crops.
 
-`src/deepguard/split_data.py`
-
-Before using it for real experiments, verify that its grouping logic uses a common source-group identifier for each original video and all associated manipulated versions. The current initial implementation groups by `video_id`, which alone may not be sufficient to prevent source leakage.
-
-### 4. Train the baseline model
-
-Once frame extraction, manifest generation, source-group splitting, and validation are complete, the training script accepts separate training and validation manifests:
+### 5. Audit face crops
 
 ```powershell
-python -m src.deepguard.train `
-  --train-manifest data/processed/splits/train.csv `
-  --validation-manifest data/processed/splits/validation.csv `
-  --epochs 5 `
-  --batch-size 8 `
-  --learning-rate 0.0001
+python scripts/audit_face_crops.py
 ```
 
-Optional arguments include `--image-root`, `--output-dir`, and `--seed`. Run the script with `--help` to inspect the available options.
+The audit reports class counts, source-group counts, missing image files, duplicate paths, and crop failures. A visual audit image is saved locally under `results/`.
 
-The training script saves its best checkpoint under the configured output directory, which defaults to `results/checkpoints`.
+### 6. Run group cross-validation
 
-Training on actual data should only begin after confirming that the extracted-image manifests match the dataset loader's expected paths and labels.
+```powershell
+python scripts/cross_validate_face_crops.py
+```
+
+The current cross-validation workflow evaluates the model across five source-group folds. Results are saved under `results/cv_face_crops/`.
+
+Check the script's help output for supported options, including training epochs, batch size, learning rate, seed, and pretrained-weight settings.
+
+### 7. Generate a fixed train/validation split
+
+```powershell
+python scripts/split_face_crops.py
+```
+
+**Caution:** The current split script assigns a specific source group to validation. It is tailored to the present pilot dataset and must be revised before use with different source groups or a new dataset.
+
+## Current Experimental Results
+
+The current local pilot contains 97 face crops from 20 videos across five source groups.
+
+| Dataset audit                          | Result |
+| -------------------------------------- | -----: |
+| Real face crops                        |     48 |
+| Fake face crops                        |     49 |
+| Missing image files                    |      0 |
+| Duplicate image paths                  |      0 |
+| Frames with failed Haar face detection |      3 |
+
+### Five-fold group cross-validation
+
+| Metric               | Mean ± standard deviation |
+| -------------------- | ------------------------: |
+| Accuracy             |           0.5059 ± 0.0719 |
+| Fake-class precision |           0.5146 ± 0.0525 |
+| Fake-class recall    |           0.5733 ± 0.2127 |
+| Fake-class F1-score  |           0.5254 ± 0.1109 |
+| Validation loss      |           0.7191 ± 0.0345 |
+
+These results are near chance level and vary across folds. The dataset is too small to support claims of reliable deepfake detection or generalization to unseen data. Improving data diversity, source-group validation, and model evaluation is the immediate priority.
+
+The local dataset and generated experiment artifacts are excluded from Git, so reproducing these figures requires access to the same permitted source data and compatible processing setup.
 
 ## Evaluation Plan
 
-DeepGuard-AI aims to evaluate the following aspects.
+### Classification metrics
 
-### Classification performance
+Future experiments should report:
 
 * Accuracy
-* Precision
-* Recall
+* Precision and recall for each class
 * F1-score
 * ROC-AUC
 * Confusion matrix
 
-Metrics should be reported on a held-out, source-group-disjoint test set whenever sufficient data is available. Class-specific performance should be examined rather than relying on accuracy alone.
+Evaluation should use source-group-disjoint data. Whenever enough data is available, a final held-out test set should remain untouched during model selection.
 
 ### Explainability
 
-Grad-CAM visualizations will be used to investigate which image regions contribute to predictions. These visualizations are diagnostic aids, not proof that a model has learned causal or semantically correct manipulation features.
+Grad-CAM visualizations will be used to investigate which image regions influence model predictions. Heatmaps are diagnostic aids, not proof that the model relies on meaningful or causal manipulation artifacts.
 
 ### Robustness
 
-Planned perturbations include:
+Planned experiments include:
 
-* JPEG compression and recompression.
-* Gaussian blur.
-* Image resizing and resampling.
-* Changes in image quality.
+* JPEG compression and recompression
+* Gaussian blur
+* Resizing and resampling
+* Changes in image quality
 
-Performance will be compared between clean and perturbed inputs using consistent evaluation samples and documented transformation settings.
+Clean and transformed images should be evaluated using consistent samples and documented transformation settings.
 
 ### Generalization
 
-Future experiments may compare performance across manipulation methods, compression levels, and unseen source videos. Conclusions will be limited to the datasets and protocols actually evaluated.
+Future work will investigate performance on unseen source videos, different manipulation methods, and different compression levels. Conclusions will be limited to the data and protocols actually evaluated.
 
-## Research Methodology
+## Limitations
 
-The intended pipeline is:
+* The pilot dataset contains only 97 face crops and five source groups.
+* Current mean cross-validation accuracy is approximately 50.6%, indicating that the baseline is not reliable.
+* Haar-cascade face detection misses some faces and can produce inconsistent crops.
+* Source-group relationships require careful verification.
+* The fixed validation-group script is specific to the current pilot.
+* Grad-CAM explanations, robustness experiments, and the interactive demo remain planned work.
+* Results from this small pilot cannot establish real-world detection performance.
 
-1. Obtain and document an authorized dataset.
-2. Extract representative frames from authentic and manipulated videos.
-3. Build a metadata manifest with labels, video identifiers, and source-group identifiers.
-4. Validate the manifest and image files.
-5. Split samples by source group to reduce leakage.
-6. Train a ResNet-18 binary-classification baseline.
-7. Evaluate classification performance on held-out data.
-8. Generate Grad-CAM explanations.
-9. Evaluate robustness under controlled perturbations.
-10. Document results, limitations, and reproducibility settings.
-
-## Current Limitations
-
-* The available dataset pilot is small and intended for software validation.
-* The frame-extraction component is not yet implemented.
-* Source-group-aware splitting requires further validation before real-data experiments.
-* Real-data performance metrics have not yet been established.
-* Explainability and robustness experiments remain future work.
-* The interactive Streamlit application is planned, not yet a completed feature.
-
-No claims of state-of-the-art performance, production readiness, or reliable real-world detection are made at this stage.
+No claims of state-of-the-art performance, production readiness, or reliable real-world detection are made.
 
 ## Roadmap
 
-* [x] Set up the Python development environment.
-* [x] Implement a ResNet-18 binary classifier.
-* [x] Implement a manifest-based dataset loader.
-* [x] Implement initial data validation and splitting components.
-* [x] Implement the initial training pipeline and smoke tests.
-* [x] Download a small FaceForensics++ pilot.
-* [ ] Implement video-frame extraction.
-* [ ] Generate image manifests with source-group metadata.
-* [ ] Verify leakage-free train/validation/test splits.
-* [ ] Train and evaluate the baseline on real data.
-* [ ] Add Grad-CAM visualizations.
-* [ ] Run controlled robustness experiments.
+* [x] Implement manifest-based dataset loading and validation.
+* [x] Implement the ResNet-18 baseline training pipeline.
+* [x] Implement frame extraction and face-crop generation.
+* [x] Add crop auditing and failure reporting.
+* [x] Add source-group cross-validation.
+* [x] Add automated tests for core pipeline behavior.
+* [ ] Expand dataset diversity across source videos and manipulation methods.
+* [ ] Verify source-group assignments against original dataset relationships.
+* [ ] Improve face detection and cropping.
+* [ ] Compare baseline architectures using the same leakage-aware protocol.
+* [ ] Add Grad-CAM visual explanations.
+* [ ] Conduct controlled robustness experiments.
+* [ ] Evaluate on a suitably sized held-out dataset.
 * [ ] Build an interactive Streamlit demonstration.
 * [ ] Document reproducible experiments and findings.
 
 ## Responsible Use
 
-DeepGuard-AI is intended for research, education, and media-forensics experimentation. Automated deepfake detection can produce false positives and false negatives, and its performance may vary across datasets, compression settings, demographic groups, and manipulation methods.
+DeepGuard-AI is intended for research, education, and media-forensics experimentation. Automated detection can produce false positives and false negatives, and performance may vary across datasets, compression settings, demographic groups, and manipulation methods.
 
 Model predictions should not be treated as definitive evidence that a person created or distributed manipulated media. High-impact decisions require independent verification and appropriate human review.
 
-Users are responsible for complying with dataset licenses, privacy requirements, applicable law, and the rights of people depicted in media.
+Users are responsible for complying with dataset terms, privacy requirements, applicable law, and the rights of people depicted in media.
 
 ## Citation
 
-If you use FaceForensics++ in your research, consult the official repository and paper for the appropriate citation:
+If you use FaceForensics++ in research, consult the official repository and paper for the appropriate citation:
 
-Rössler, A., Cozzolino, D., Verdoliva, L., Riess, C., Thies, J., and Nießner, M. *FaceForensics++: Learning to Detect Manipulated Facial Images.* Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), 2019.
+Rössler, A., Cozzolino, D., Verdoliva, L., Thies, J., and Nießner, M. “FaceForensics++: Learning to Detect Manipulated Facial Images.” *Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)*, 2019.
 
 Paper: https://arxiv.org/abs/1901.08971
 
-For DeepGuard-AI itself, cite the repository URL until a formal paper or archival release is available:
+For DeepGuard-AI, cite the repository until a formal paper or archival release is available:
 
-`https://github.com/zMHA/DeepGuard-AI`
+https://github.com/zMHA/DeepGuard-AI
 
 ## License
 
-No license has yet been specified for this repository. Unless and until a license is added, do not assume that the project's source code is licensed for unrestricted reuse.
+The source code is distributed under the license specified in the repository's `LICENSE` file, once that file is added and verified.
 
-The FaceForensics++ dataset is governed by its own terms and is not relicensed by this repository.
+The software license does not grant rights to the FaceForensics++ dataset, third-party libraries, or other external materials. Those remain subject to their own terms and licenses.
